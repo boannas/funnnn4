@@ -17,7 +17,7 @@ class setup_node(Node):
         self.publisher_end = self.create_publisher(PoseStamped, '/end_effector', 10)
 
         self.subscription = self.create_subscription(JointState, '/joint_states', self.end_effector_cb, 10)
-        self.timer = self.create_timer(0.01, self.timer_callback)  
+        self.timer = self.create_timer(1, self.timer_callback)  
         
         self.robot = rtb.DHRobot(
         [
@@ -40,8 +40,8 @@ class setup_node(Node):
             z = np.random.uniform(-max_val, max_val) + 0.2
 
             r = sqrt(x**2 + y**2 + z**2)
-            if r >= min_val and r < max_val:
-                self.get_logger().info(f"{x,y,z}")
+            if r**2 >= min_val**2 and r**2 < max_val**2:
+                # self.get_logger().info(f"{x,y,z}")
                 self.get_logger().info(f"{r}")
                 return x,y,z
             else :

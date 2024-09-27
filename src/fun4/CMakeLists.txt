@@ -28,7 +28,10 @@ ament_python_install_package(${PROJECT_NAME})
 # Install Python executables
 install(PROGRAMS
   scripts/dummy_script.py
+  scripts/jointstate_script.py
   scripts/setup_node.py
+  scripts/inverse_kine_node.py
+
   DESTINATION lib/${PROJECT_NAME}
 )
 

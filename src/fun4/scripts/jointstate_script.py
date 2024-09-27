@@ -13,7 +13,7 @@ class DummyNode(Node):
         self.joint_pub = self.create_publisher(JointState, "/joint_states", 10)
         self.dt = 0.01
         self.create_timer(self.dt, self.sim_loop)
-        self.q = [0.0, 0.5, 1.4]
+        self.q = [0.0, 0.0, 0.0]
         self.cmd_vel = [0.0, 0.0, 0.0]
         self.name = ["joint_1", "joint_2", "joint_3"]
 
