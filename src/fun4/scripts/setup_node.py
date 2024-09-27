@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 import numpy as np
 from geometry_msgs.msg import PoseStamped
-from math import pi
+from math import pi, sqrt
 from spatialmath import SE3
 import roboticstoolbox as rtb
 from sensor_msgs.msg import JointState
@@ -29,15 +29,23 @@ class setup_node(Node):
         )
         self.robot.tool = SE3.Trans(0.28, 0.0, 0.0) * SE3.RPY(pi/2, 0, pi/2)
 
-        self.get_logger().info(f"{self.robot}")
+        # self.get_logger().info(f"{self.robot}")
 
         
         
     def generate_random_target(self, min_val=0.03, max_val=0.53):
-        x = np.random.choice([np.random.uniform(min_val, max_val), np.random.uniform(-min_val, -max_val)])
-        y = np.random.choice([np.random.uniform(min_val, max_val), np.random.uniform(-min_val, -max_val)])
-        z = np.random.choice([np.random.uniform(min_val, max_val), np.random.uniform(-min_val, -max_val)])
-        return x, y, z
+        while True:
+            x = np.random.uniform(-max_val, max_val)
+            y = np.random.uniform(-max_val, max_val)
+            z = np.random.uniform(-max_val, max_val) + 0.2
+
+            r = sqrt(x**2 + y**2 + z**2)
+            if r >= min_val and r < max_val:
+                self.get_logger().info(f"{x,y,z}")
+                self.get_logger().info(f"{r}")
+                return x,y,z
+            else :
+                pass
     
     def end_effector_cb(self, msg: JointState):
         q1 = msg.position[0]
@@ -52,32 +60,23 @@ class setup_node(Node):
         
         msg = PoseStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "odom" 
+        msg.header.frame_id = "link_0" 
         
         msg.pose.position.x = T_e.t[0]
         msg.pose.position.y = T_e.t[1]
         msg.pose.position.z = T_e.t[2]
         self.publisher_end.publish(msg)
-
-
-        
-    
     
     def timer_callback(self):
         msg = PoseStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "odom" 
+        msg.header.frame_id = "link_0" 
         
         x, y, z = self.generate_random_target()
         
         msg.pose.position.x = x
         msg.pose.position.y = y
         msg.pose.position.z = z
-        
-        # msg.pose.orientation.x = 0.0
-        # msg.pose.orientation.y = 0.0
-        # msg.pose.orientation.z = 0.0
-        # msg.pose.orientation.w = 1.0
         
         self.publisher_target.publish(msg)
         

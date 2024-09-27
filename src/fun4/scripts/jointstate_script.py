@@ -20,6 +20,8 @@ class DummyNode(Node):
     def sim_loop(self):
         msg = JointState()
         msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "odom" 
+
         q_d = [0.1, 0.1, 0.1]
         self.q[0] = self.q[0] + (q_d[0] * self.dt)
         self.q[1] = self.q[1] + (q_d[1] * self.dt)
