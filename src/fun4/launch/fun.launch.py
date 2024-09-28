@@ -24,7 +24,7 @@ import xacro
 def generate_launch_description():
     
     pkg = get_package_share_directory('fun4')
-    rviz_path = os.path.join(pkg,'config','display.rviz')
+    rviz_path = os.path.join(pkg,'config','display_mod.rviz')
     rviz = Node(
         package='rviz2',
         executable='rviz2',
@@ -44,10 +44,10 @@ def generate_launch_description():
                                   parameters=parameters
     )
 
-    joint_state_publisher_gui = Node(
-        package='joint_state_publisher_gui',
-        executable='joint_state_publisher_gui'
-    )
+    # joint_state_publisher_gui = Node(
+    #     package='joint_state_publisher_gui',
+    #     executable='joint_state_publisher_gui'
+    # )
 
     # random_node = Node(
     #     package='random_target',
@@ -57,6 +57,6 @@ def generate_launch_description():
     
     launch_description.add_action(rviz)
     launch_description.add_action(robot_state_publisher)
-    launch_description.add_action(joint_state_publisher_gui)
+    # launch_description.add_action(joint_state_publisher_gui)
     
     return launch_description

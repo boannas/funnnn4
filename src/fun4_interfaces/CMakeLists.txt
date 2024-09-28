@@ -30,6 +30,8 @@ endif()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Mode.srv"
+  "srv/Target.srv"
+
   DEPENDENCIES std_msgs
   DEPENDENCIES geometry_msgs
 )

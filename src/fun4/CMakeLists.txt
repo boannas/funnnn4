@@ -29,8 +29,14 @@ ament_python_install_package(${PROJECT_NAME})
 install(PROGRAMS
   scripts/dummy_script.py
   scripts/jointstate_script.py
-  scripts/setup_node.py
   scripts/inverse_kine_node.py
+  scripts/teleop.py
+  scripts/auto.py
+
+  scripts/scheduler.py
+  scripts/end_effector.py
+  scripts/random_node.py
+
 
   DESTINATION lib/${PROJECT_NAME}
 )
