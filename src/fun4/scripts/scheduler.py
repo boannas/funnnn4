@@ -15,7 +15,7 @@ class SchedulerNode(Node):
         self.mode_pub = self.create_publisher(String, '/robot_mode', 10)
         self.create_timer(0.01, self.timer_callback)
 
-        self.current_mode = 0
+        self.current_mode = 1
 
     def handle_mode_request(self, request, response):
         mode = request.mode.data

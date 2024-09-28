@@ -49,14 +49,39 @@ def generate_launch_description():
     #     executable='joint_state_publisher_gui'
     # )
 
-    # random_node = Node(
-    #     package='random_target',
-    #     executable='random.py'
+    random_node = Node(
+        package='fun4',
+        executable='random_node.py'
+    )
+    
+    auto_node = Node(
+        package='fun4',
+        executable='auto.py'
+    )
+    
+    scheduler_node = Node(
+        package='fun4',
+        executable='scheduler.py'
+    )
+    
+    # ike_node = Node(
+    #     package='fun4',
+    #     executable='inverse_kine_node.py'
     # )
+    
+    
+    
     launch_description = LaunchDescription()
     
     launch_description.add_action(rviz)
     launch_description.add_action(robot_state_publisher)
+    launch_description.add_action(random_node)
+    launch_description.add_action(auto_node)
+    launch_description.add_action(scheduler_node)
+    # launch_description.add_action(ike_node)
+
+
+
     # launch_description.add_action(joint_state_publisher_gui)
     
     return launch_description
