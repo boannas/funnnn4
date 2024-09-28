@@ -64,13 +64,21 @@ def generate_launch_description():
         executable='scheduler.py'
     )
     
-    # ike_node = Node(
-    #     package='fun4',
-    #     executable='inverse_kine_node.py'
-    # )
+    ike_node = Node(
+        package='fun4',
+        executable='inverse_kine_node.py'
+    )
     
     
+    end_effector_node = Node(
+        package='fun4',
+        executable='end_effector.py'
+    )
     
+    teleop_node = Node(
+        package='fun4',
+        executable='teleop.py'
+    )
     launch_description = LaunchDescription()
     
     launch_description.add_action(rviz)
@@ -78,7 +86,11 @@ def generate_launch_description():
     launch_description.add_action(random_node)
     launch_description.add_action(auto_node)
     launch_description.add_action(scheduler_node)
-    # launch_description.add_action(ike_node)
+    launch_description.add_action(ike_node)
+    launch_description.add_action(end_effector_node)
+    launch_description.add_action(teleop_node)
+
+
 
 
 

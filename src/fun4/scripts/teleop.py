@@ -1,21 +1,23 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
+from example_description.dummy_module import dummy_function, dummy_var
 import rclpy
 from rclpy.node import Node
+from math import pi
+import math
+import roboticstoolbox as rtb
+from scipy.spatial.transform import Rotation as R
+from spatialmath import SE3
+import numpy as np
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import JointState
-import numpy as np
-import roboticstoolbox as rtb
-from math import pi
-from spatialmath import SE3
+from std_msgs.msg import String
 
-class RobotControlNode(Node):
+
+
+class TeleopNode(Node):
     def __init__(self):
-        super().__init__('robot_control_node')
-
-        self.cmd_vel_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
-        self.joint_pub = self.create_publisher(JointState, "/joint_states", 10)
-
+        super().__init__('teleop_node')
         self.robot = rtb.DHRobot(
             [
                 rtb.RevoluteMDH(d=0.2),
@@ -26,48 +28,55 @@ class RobotControlNode(Node):
         )
         self.robot.tool = SE3.Trans(0.28, 0.0, 0.0) * SE3.RPY(pi/2, 0, pi/2)
         
-        self.q = [0.0, 0.0, 0.0]  
+        self.q = np.array([0.0, 0.0, 0.0])
+        self.q_vel = np.array([0.0, 0.0, 0.0])
+        self.cmd_vel = np.array([0.0, 0.0, 0.0])
         self.name = ["joint_1", "joint_2", "joint_3"]
+        self.joint_pub = self.create_publisher(JointState, "/joint_states", 10)
+        self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_cb, 10)
+        self.create_timer(0.01, self.timer_callback)
+        self.mode_sub = self.create_subscription(String, '/robot_mode', self.mode_cb, 10)
+
+        self.current_mode = ""
+
         
-        self.dt = 0.1  # 100ms
+    def mode_cb(self, msg:String):
+        self.current_mode = msg.data
+        # self.get_logger().info(f"{self.current_mode}")
 
-    def cmd_vel_callback(self, msg: Twist):
-        linear_velocity = [msg.linear.x, msg.linear.y, msg.linear.z]
-        angular_velocity = [msg.angular.x, msg.angular.y, msg.angular.z]
+        
+    def cmd_cb(self, msg: Twist):        
+        self.cmd_vel = np.array([msg.linear.x, msg.linear.y, msg.linear.z])
+        # self.get_logger().info(f"{self.cmd_vel}")
+        
+    def timer_callback(self):
+        if self.current_mode == "Teleoperation":
 
-        v_e = np.array([linear_velocity[0], linear_velocity[1], linear_velocity[2], angular_velocity[0], angular_velocity[1], angular_velocity[2]])
+            J = self.robot.jacob0(self.q)
+            J_trans = J[:3,:3]
+            
+            q_dot = np.linalg.pinv(J_trans).dot(self.cmd_vel)
+            
+            self.q += q_dot * 0.1
+            
+            msg = JointState()
+            msg.header.stamp = self.get_clock().now().to_msg()
+            msg.header.frame_id = "odom"
+            
+            for i in range(len(self.q)):
+                msg.position.append(self.q[i])
+                msg.name.append(self.name[i])
+                
+            self.joint_pub.publish(msg)
+            # self.get_logger().info(f"{msg}")
 
-        J = self.robot.jacob0(self.q)
-
-        q_dot = np.linalg.pinv(J) @ v_e
-
-        self.q = [self.q[i] + q_dot[i] * self.dt for i in range(len(self.q))]
-
-        self.publish_joint_state(q_dot)
-
-    def publish_joint_state(self, q_dot):
-        msg = JointState()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = "odom"
-
-        for i in range(len(self.q)):
-            msg.position.append(self.q[i])
-            msg.velocity.append(q_dot[i])
-            msg.name.append(self.name[i])
-
-        self.joint_pub.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)
-    node = RobotControlNode()
+    node = TeleopNode()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
 
-    try:
-        rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        node.destroy_node()
-        rclpy.shutdown()
-
-if __name__ == '__main__':
+if __name__=='__main__':
     main()
