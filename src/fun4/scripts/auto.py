@@ -4,7 +4,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped, Point
 from sensor_msgs.msg import JointState
-from fun4_interfaces.srv import Target  # Import your custom Target service
+from fun4_interfaces.srv import Target 
 import roboticstoolbox as rtb
 from math import pi, sqrt
 from spatialmath import SE3

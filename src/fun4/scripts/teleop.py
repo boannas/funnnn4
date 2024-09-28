@@ -32,22 +32,17 @@ class RobotControlNode(Node):
         self.dt = 0.1  # 100ms
 
     def cmd_vel_callback(self, msg: Twist):
-        # Extract the linear and angular velocity commands
         linear_velocity = [msg.linear.x, msg.linear.y, msg.linear.z]
         angular_velocity = [msg.angular.x, msg.angular.y, msg.angular.z]
 
         v_e = np.array([linear_velocity[0], linear_velocity[1], linear_velocity[2], angular_velocity[0], angular_velocity[1], angular_velocity[2]])
 
-        # Compute Jacobian at the current joint positions
         J = self.robot.jacob0(self.q)
 
-        # Compute joint velocities using the pseudo-inverse of the Jacobian
         q_dot = np.linalg.pinv(J) @ v_e
 
-        # Update joint positions based on the joint velocities
         self.q = [self.q[i] + q_dot[i] * self.dt for i in range(len(self.q))]
 
-        # Publish the new joint state
         self.publish_joint_state(q_dot)
 
     def publish_joint_state(self, q_dot):
@@ -55,7 +50,6 @@ class RobotControlNode(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "odom"
 
-        # Update joint positions and velocities
         for i in range(len(self.q)):
             msg.position.append(self.q[i])
             msg.velocity.append(q_dot[i])

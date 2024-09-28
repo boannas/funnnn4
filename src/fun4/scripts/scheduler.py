@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from fun4_interfaces.srv import Mode  # Import your custom Mode service
+from fun4_interfaces.srv import Mode 
 from std_msgs.msg import String
 
 
