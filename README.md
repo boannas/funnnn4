@@ -30,6 +30,13 @@ The Fun4 project consists of three main components:
 
 ### Nodes
 
+-   **end_effector** : compute robot arm cofiguration and publish end-effector position to rviz
+-   **random_node** : random target for autonomous mode to reach target
+-   schedular : wait for user input mode selection, at begin it should inverse kinematics(mode1) but you can select mode by service call
+-   **inverse_kine** : collect target point(x, y, z) by service call and use inverse kinematic to compute how can each joint rotate to reach target point and it will publish joint_state to control robot 
+-   **teleop** :  collect cmd_vel input from teleop_twist_keyboard node and compute to publish joint_state to control robot, in this mode it has 2 modes inside cmd_vel reference from base frame or cmd_vel reference from end-effector frame
+-   **auto** :  subscribe target point from random node and try to reach the point, if it close to target (< threshold) it will sent noti and recieve next target point and try to go to next target
+
 
 ### Topics
 
