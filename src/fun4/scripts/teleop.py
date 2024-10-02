@@ -1,18 +1,14 @@
 #!/usr/bin/python3
 
-from example_description.dummy_module import dummy_function, dummy_var
 import rclpy
 from rclpy.node import Node
 from math import pi
-import math
 import roboticstoolbox as rtb
-from scipy.spatial.transform import Rotation as R
 from spatialmath import SE3
 import numpy as np
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
-
 
 
 class TeleopNode(Node):
@@ -28,47 +24,54 @@ class TeleopNode(Node):
         )
         self.robot.tool = SE3.Trans(0.28, 0.0, 0.0) * SE3.RPY(pi/2, 0, pi/2)
         
-        self.q = np.array([0.0, 0.0, 0.0])
-        self.q_vel = np.array([0.0, 0.0, 0.0])
-        self.cmd_vel = np.array([0.0, 0.0, 0.0])
-        self.name = ["joint_1", "joint_2", "joint_3"]
+        self.q = np.array([0.05, 0.2, 0.2]) 
+        self.q_vel = np.array([0.0, 0.0, 0.0])  # Joint velocitiy
+        self.cmd_vel = np.array([0.0, 0.0, 0.0])  # End-effector velocity
+        self.name = ["joint_1", "joint_2", "joint_3"]  # Joint names
         self.joint_pub = self.create_publisher(JointState, "/joint_states", 10)
         self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_cb, 10)
         self.create_timer(0.01, self.timer_callback)
         self.mode_sub = self.create_subscription(String, '/robot_mode', self.mode_cb, 10)
 
         self.current_mode = ""
+        self.manipulability_threshold = 0.0001  
+        self.damping_factor = 0.1  
 
-        
-    def mode_cb(self, msg:String):
+    def mode_cb(self, msg: String):
         self.current_mode = msg.data
-        # self.get_logger().info(f"{self.current_mode}")
 
-        
     def cmd_cb(self, msg: Twist):        
         self.cmd_vel = np.array([msg.linear.x, msg.linear.y, msg.linear.z])
-        # self.get_logger().info(f"{self.cmd_vel}")
-        
+
     def timer_callback(self):
         if self.current_mode == "Teleoperation":
 
-            J = self.robot.jacob0(self.q)
-            J_trans = J[:3,:3]
-            
-            q_dot = np.linalg.pinv(J_trans).dot(self.cmd_vel)
-            
-            self.q += q_dot * 0.1
+            J = self.robot.jacobe(self.q)
+            J_reduce = J[:3, :3]  # Only Rotation matrix 3x3 
+            manipulability = np.sqrt(np.linalg.det(J_reduce @ J_reduce.T))
             
             msg = JointState()
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.header.frame_id = "odom"
+
+            # self.get_logger().info(f" manipulability: {manipulability:.6f}")
             
+            if manipulability > self.manipulability_threshold:
+                
+                q_dot = np.linalg.inv(J_reduce) @ self.cmd_vel
+            else :
+                self.get_logger().warn("Low manipulatability")
+                J_damped = J_reduce.T @ np.linalg.inv(J_reduce @ J_reduce.T + self.damping_factor**2 * np.eye(3))
+                q_dot = J_damped @ self.cmd_vel
+                
+            # self.get_logger().info(f"q _ dot: {q_dot}")
+
+            self.q += q_dot * 0.1
             for i in range(len(self.q)):
                 msg.position.append(self.q[i])
                 msg.name.append(self.name[i])
-                
+            
             self.joint_pub.publish(msg)
-            # self.get_logger().info(f"{msg}")
 
 
 def main(args=None):
@@ -78,5 +81,6 @@ def main(args=None):
     node.destroy_node()
     rclpy.shutdown()
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
     main()
