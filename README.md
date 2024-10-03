@@ -39,16 +39,16 @@ The Fun4 project consists of three main components:
 
 
 ### Topics
--   /joint_states
--   /cmd_vel
--   /robot_mode
--   /end_effect 
--   /target
+-   /joint_states : for control each joint radian
+-   /cmd_vel : from teleop_twist_keyboard to control velocity of end-effector
+-   /robot_mode : to select robot mode
+-   /end_effect : visualize end-effector in rviz
+-   /target : set target for robot to reach point
 
 ### Services
--   /auto_target
--   /set_target
--   /set_mode
+-   /auto_target : request target(x, y, z) and response success
+-   /set_target : request target(x, y, z) and response success
+-   /set_mode : request mode(1, 2, 3, 4) and response success
 
 
 ## Installation and Setup
@@ -56,47 +56,73 @@ The Fun4 project consists of three main components:
 ### Step 1: Clone the repository
 
 ```bash
-git clone https://github.com/ongsa12342/FunnyTurtlePlus.git
+git clone https://github.com/boannas/funnnn4.git
 ```
 
 ### Step 2: Build the Package
 ```bash
-cd FunnyTurtlePlus && colcon build
+cd funnnn4 && colcon build
 ```
 ### Step 3: Build turtlesim plus
 ```bash
-source dependencies_install.bash && colcon build --packages-select turtlesim_plus turtlesim_plus_interfaces
+source dependencies_install.bash && colcon build --packages-select fun4 fun4_interfaces
 ```
 ### Step 4: Source the Setup File
 ```bash
-source ~/FunnyTurtlePlus/install/setup.bash
+source ~/funnnn4/install/setup.bash
 ```
 ### Step 5: (Optional) Add to .bashrc
 ```bash
-echo "source ~/FunnyTurtlePlus/install/setup.bash" >> ~/.bashrc && source ~/.bashrc
+echo "source ~/funnnn4/install/setup.bash" >> ~/.bashrc && source ~/.bashrc
 ```
+
+### Step 6: Install and setup python package
+```bash
+pip3 install numpy==1.23.5
+pip3 install roboticstoolbox-python
+```
+
+
 
 ## Usage
 - ### Run seperately node
 
 ```bash
-    ros2 run funnyturtle {Node_name}
+ros2 run fun4 {Node_name}
 ```
 
-- ### Launch teleop turtle only
+- ### run teleop_twist_keyboard node
 ```bash
-    ros2 launch funnyturtle teleop.launch.py
+ros2 run teleop_twist_keyboard teleop_twist_keyboard # can use only in mode 2(teleop)
 ```
 
-- ### Launch teleop and copy tutles together
+- ### Launch fun4 project 
 ```bash
-    ros2 launch funnyturtle funnyturtle.launch.py
+ros2 launch fun4 fun.launch.py 
 ```
 
-- ### Launch Extra Melodic turtle (After copy turtle was done!)
+
+- ### Set robot mode 
 ```bash
-    ros2 launch funnyturtle melodic.launch.py
+ros2 service call /set_mode fun4_interfaces/srv/Mode "mode: 
+  data: {mode}" # Mode is integer 1-4
+  # mode 1: inverse kinematics
+  # mode 2: teleop reference from base
+  # mode 3: teleop reference from end-effector
+  # mode 4: Autonomous 
 ```
+
+- ### Set target for inverse kinematics mode
+```bash
+ros2 service call /set_target fun4_interfaces/srv/Target "target:
+  x: 0.0
+  y: 0.0
+  z: 0.0" 
+  # change x, y, z to your desire target point
+```
+
+ 
+
 
 ## Testing and Result
 
