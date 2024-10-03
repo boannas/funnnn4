@@ -41,12 +41,12 @@ class RandomNode(Node):
 
             msg = PoseStamped()
             msg.header.stamp = self.get_clock().now().to_msg()
-            msg.header.frame_id = "link_0"
+            msg.header.frame_id = "link_0"  
             msg.pose.position.x = x
             msg.pose.position.y = y
             msg.pose.position.z = z
             self.send_target_request(msg.pose.position)
-        else:
+        else:   
 
             self.get_logger().info("Waiting for autoNode to reach the previous target...")
 

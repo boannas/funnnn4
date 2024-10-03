@@ -39,10 +39,16 @@ The Fun4 project consists of three main components:
 
 
 ### Topics
-
+-   /joint_states
+-   /cmd_vel
+-   /robot_mode
+-   /end_effect 
+-   /target
 
 ### Services
-
+-   /auto_target
+-   /set_target
+-   /set_mode
 
 
 ## Installation and Setup

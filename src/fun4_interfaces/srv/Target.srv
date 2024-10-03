@@ -1,4 +1,3 @@
 geometry_msgs/Point target          # Target point x ,y ,z
 ---
 bool success                        # return True when success to select mode 
-bool flag                           # True is ready to get new target

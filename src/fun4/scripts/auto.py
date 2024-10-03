@@ -14,8 +14,7 @@ from std_msgs.msg import String
 class autoNode(Node):
     def __init__(self):
         super().__init__('auto_node')
-        
-        # Define the robot with DH parameters
+    
         self.robot = rtb.DHRobot(
             [
                 rtb.RevoluteMDH(d=0.2),
@@ -28,8 +27,8 @@ class autoNode(Node):
         
         # Initial parameters
         self.dt = 0.01
-        self.q = [0.0, 0.0, 0.0]  # Current joint states
-        self.q_sol = [0.0, 0.0, 0.0]  # Target joint states
+        self.q = [0.0, 0.0, 0.0]  
+        self.q_sol = [0.0, 0.0, 0.0]  
         self.name = ["joint_1", "joint_2", "joint_3"]
         self.current_mode = ""
         self.ready = True  

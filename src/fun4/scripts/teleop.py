@@ -25,53 +25,59 @@ class TeleopNode(Node):
         self.robot.tool = SE3.Trans(0.28, 0.0, 0.0) * SE3.RPY(pi/2, 0, pi/2)
         
         self.q = np.array([0.05, 0.2, 0.2]) 
-        self.q_vel = np.array([0.0, 0.0, 0.0])  # Joint velocitiy
-        self.cmd_vel = np.array([0.0, 0.0, 0.0])  # End-effector velocity
-        self.name = ["joint_1", "joint_2", "joint_3"]  # Joint names
+        self.q_vel = np.array([0.0, 0.0, 0.0])  
+        self.cmd_vel = np.array([0.0, 0.0, 0.0]) 
+        self.name = ["joint_1", "joint_2", "joint_3"]  
         self.joint_pub = self.create_publisher(JointState, "/joint_states", 10)
         self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_cb, 10)
-        self.create_timer(0.01, self.timer_callback)
         self.mode_sub = self.create_subscription(String, '/robot_mode', self.mode_cb, 10)
+        
+        self.create_timer(0.01, self.timer_callback)
 
         self.current_mode = ""
-        self.manipulability_threshold = 0.0001  
-        self.damping_factor = 0.1  
+        self.manipulability_threshold = 0.00001  
+        self.damping_factor = 0.1
 
     def mode_cb(self, msg: String):
         self.current_mode = msg.data
 
     def cmd_cb(self, msg: Twist):        
-        self.cmd_vel = np.array([msg.linear.x, msg.linear.y, msg.linear.z])
+        self.cmd_vel = np.array([msg.linear.x * 0.1, msg.linear.y * 0.1, msg.linear.z * 0.1])
 
     def timer_callback(self):
-        if self.current_mode == "Teleoperation":
+        if self.current_mode == "Teleoperation_b":
+            J = self.robot.jacob0(self.q) 
+        elif self.current_mode == "Teleoperation_e":
+            J = self.robot.jacobe(self.q)  
+        else:
+            return 
 
-            J = self.robot.jacobe(self.q)
-            J_reduce = J[:3, :3]  # Only Rotation matrix 3x3 
-            manipulability = np.sqrt(np.linalg.det(J_reduce @ J_reduce.T))
-            
-            msg = JointState()
-            msg.header.stamp = self.get_clock().now().to_msg()
-            msg.header.frame_id = "odom"
+        J_reduce = J[:3, :3]  
+        manipulability = np.sqrt(np.linalg.det(J_reduce @ J_reduce.T))
 
-            # self.get_logger().info(f" manipulability: {manipulability:.6f}")
-            
-            if manipulability > self.manipulability_threshold:
-                
-                q_dot = np.linalg.inv(J_reduce) @ self.cmd_vel
-            else :
-                self.get_logger().warn("Low manipulatability")
-                J_damped = J_reduce.T @ np.linalg.inv(J_reduce @ J_reduce.T + self.damping_factor**2 * np.eye(3))
-                q_dot = J_damped @ self.cmd_vel
-                
-            # self.get_logger().info(f"q _ dot: {q_dot}")
+        msg = JointState()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "odom"
 
-            self.q += q_dot * 0.1
-            for i in range(len(self.q)):
-                msg.position.append(self.q[i])
-                msg.name.append(self.name[i])
-            
-            self.joint_pub.publish(msg)
+        if manipulability > self.manipulability_threshold:
+            q_dot = np.linalg.inv(J_reduce) @ self.cmd_vel
+        else:
+            #SVD-based damping
+            u, s, v = np.linalg.svd(J_reduce)
+            for i in range(len(s)):
+                if s[i] < 0.005:  # Threshold 
+                    s[i] = 0
+                else:
+                    s[i] = 1.0 / float(s[i])  
+            J_damped = np.dot(v.T, np.dot(np.diag(s), u.T)) 
+            q_dot = J_damped @ self.cmd_vel
+        
+        self.q += q_dot * 0.1
+        for i in range(len(self.q)):
+            msg.position.append(self.q[i])
+            msg.name.append(self.name[i])
+
+        self.joint_pub.publish(msg)
 
 
 def main(args=None):

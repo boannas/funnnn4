@@ -21,15 +21,18 @@ class SchedulerNode(Node):
         mode = request.mode.data
         # self.get_logger().info(f"mode ={mode}")
 
-        if mode in [1, 2, 3]:
+        if mode in [1, 2, 3, 4]:
             self.current_mode = mode
             response.success = True
             if mode == 1:
                 self.get_logger().info(f"Mode set to Inverse kinematics")
             elif mode == 2:
-                self.get_logger().info(f"Mode set to Teleoperation")
+                self.get_logger().info(f"Mode set to Teleoperation_Base")
             elif mode == 3:
+                self.get_logger().info(f"Mode set to Teleoperation_end-effector")
+            elif mode == 4:
                 self.get_logger().info(f"Mode set to Autonomous")
+
         else:
             response.success = False
             self.get_logger().warn(f"Invalid mode: {mode}")
@@ -41,8 +44,10 @@ class SchedulerNode(Node):
         if mode == 1:
             mode_msg.data = "Inverse Kinematics"
         elif mode == 2:
-            mode_msg.data = "Teleoperation"
+            mode_msg.data = "Teleoperation_b"
         elif mode == 3:
+            mode_msg.data = "Teleoperation_e"
+        elif mode == 4:
             mode_msg.data = "Autonomous"
 
         self.mode_pub.publish(mode_msg)
