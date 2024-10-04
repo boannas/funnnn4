@@ -29,13 +29,15 @@ class TeleopNode(Node):
         self.cmd_vel = np.array([0.0, 0.0, 0.0]) 
         self.name = ["joint_1", "joint_2", "joint_3"]  
         self.joint_pub = self.create_publisher(JointState, "/joint_states", 10)
+        self.singular_pub = self.create_publisher(String, "/singularity_check", 10)
+
         self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_cb, 10)
         self.mode_sub = self.create_subscription(String, '/robot_mode', self.mode_cb, 10)
         
         self.create_timer(0.01, self.timer_callback)
 
         self.current_mode = ""
-        self.manipulability_threshold = 0.00001  
+        self.manipulability_threshold = 0.0001  
         self.damping_factor = 0.1
 
     def mode_cb(self, msg: String):
@@ -71,6 +73,11 @@ class TeleopNode(Node):
                     s[i] = 1.0 / float(s[i])  
             J_damped = np.dot(v.T, np.dot(np.diag(s), u.T)) 
             q_dot = J_damped @ self.cmd_vel
+            
+            msgs = String()
+            msgs.data = "Warning Near Sigularity! use SVD damping to handle sigularity"
+            self.singular_pub.publish(msgs)
+            
         
         self.q += q_dot * 0.1
         for i in range(len(self.q)):

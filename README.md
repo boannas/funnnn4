@@ -7,7 +7,6 @@ Fun4 is a project that integrated in field of ROS2 (Robotic Operate System) and 
 - [System Architecture](#system-archtecture)
 - [Installation and setup](#installation-and-setup)
 - [Usage](#usage)
-- [Testing and Result](#testing-and-result)
 
 ## Project Overview
 
@@ -32,23 +31,23 @@ The Fun4 project consists of three main components:
 
 -   **end_effector** : compute robot arm cofiguration and publish end-effector position to rviz
 -   **random_node** : random target for autonomous mode to reach target
--   schedular : wait for user input mode selection, at begin it should inverse kinematics(mode1) but you can select mode by service call
+-   **schedular** : wait for user input mode selection, at begin it should inverse kinematics(mode1) but you can select mode by service call
 -   **inverse_kine** : collect target point(x, y, z) by service call and use inverse kinematic to compute how can each joint rotate to reach target point and it will publish joint_state to control robot 
 -   **teleop** :  collect cmd_vel input from teleop_twist_keyboard node and compute to publish joint_state to control robot, in this mode it has 2 modes inside cmd_vel reference from base frame or cmd_vel reference from end-effector frame
 -   **auto** :  subscribe target point from random node and try to reach the point, if it close to target (< threshold) it will sent noti and recieve next target point and try to go to next target
 
 
 ### Topics
--   /joint_states : for control each joint radian
--   /cmd_vel : from teleop_twist_keyboard to control velocity of end-effector
--   /robot_mode : to select robot mode
--   /end_effect : visualize end-effector in rviz
--   /target : set target for robot to reach point
+-   **/joint_states** : for control each joint radian
+-   **/cmd_vel** : from teleop_twist_keyboard to control velocity of end-effector
+-   **/robot_mode** : to select robot mode
+-   **/end_effect** : visualize end-effector in rviz
+-   **/target** : set target for robot to reach point
 
 ### Services
--   /auto_target : request target(x, y, z) and response success
--   /set_target : request target(x, y, z) and response success
--   /set_mode : request mode(1, 2, 3, 4) and response success
+-   **/auto_target** : request target(x, y, z) and response success
+-   **/set_target** : request target(x, y, z) and response success
+-   **/set_mode** : request mode(1, 2, 3, 4) and response success
 
 
 ## Installation and Setup
@@ -92,38 +91,38 @@ ros2 run fun4 {Node_name}
 ```
 
 - ### run teleop_twist_keyboard node
+  can use only in mode 2(teleop)
 ```bash
-ros2 run teleop_twist_keyboard teleop_twist_keyboard # can use only in mode 2(teleop)
+ros2 run teleop_twist_keyboard teleop_twist_keyboard 
 ```
 
 - ### Launch fun4 project 
+  Firstly, it begin at inverse-kinematics mode you can change mode by following code
+
 ```bash
 ros2 launch fun4 fun.launch.py 
 ```
 
 
 - ### Set robot mode 
+  1: inverse kinematics, 2: teleop reference from base, 
+  
+  3: teleop reference from end-effector, 4: Autonomous 
 ```bash
 ros2 service call /set_mode fun4_interfaces/srv/Mode "mode: 
-  data: {mode}" # Mode is integer 1-4
-  # mode 1: inverse kinematics
-  # mode 2: teleop reference from base
-  # mode 3: teleop reference from end-effector
-  # mode 4: Autonomous 
+  data: {mode}"
 ```
 
 - ### Set target for inverse kinematics mode
+  change x, y, z to your desire target point
 ```bash
 ros2 service call /set_target fun4_interfaces/srv/Target "target:
   x: 0.0
   y: 0.0
   z: 0.0" 
-  # change x, y, z to your desire target point
 ```
 
- 
-
-
-## Testing and Result
-
-#
+- ### Display singularity check from teleop mode
+```bash
+ros2 topic echo /singularity_check 
+```
